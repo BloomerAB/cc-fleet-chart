@@ -5,19 +5,14 @@ Dashboard: https://{{ .Values.ingress.host }}
 {{- else if .Values.ingressRoute.enabled }}
 Dashboard: https://{{ .Values.ingressRoute.host }}
 {{- else }}
-Dashboard: kubectl port-forward svc/{{ include "claude-platform.fullname" . }}-dashboard 8080:80
-            Then open http://localhost:8080
+Dashboard: kubectl port-forward svc/{{ include "claude-platform.fullname" . }}-session-manager 3000:3000
+            Then open http://localhost:3000
 {{- end }}
 
 Prerequisites:
   1. ScyllaDB must be running at {{ .Values.scylla.host }}:{{ .Values.scylla.port }}
-  2. Anthropic API key secret '{{ .Values.anthropic.secretName }}' must exist in namespace '{{ .Release.Namespace }}'
-{{- if not .Values.anthropic.apiKey }}
-     Create it: kubectl create secret generic {{ .Values.anthropic.secretName }} \
-       --from-literal={{ .Values.anthropic.secretKey }}=sk-ant-... \
-       -n {{ .Release.Namespace }}
-{{- end }}
-  3. GitHub OAuth App configured with callback: {{ include "claude-platform.corsOrigin" . }}/auth/callback
-  4. GitHub App for repo access (app ID, private key, installation ID)
+     Schema must be initialized (see schema.cql in the session-manager repo)
+  2. GitHub OAuth App configured with callback:
+     {{ include "claude-platform.corsOrigin" . }}/api/auth/callback
 
 PWA: The dashboard is installable as a Progressive Web App on mobile and desktop.

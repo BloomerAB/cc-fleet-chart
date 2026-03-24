@@ -16,7 +16,6 @@ spec:
         {{- include "claude-platform.labels" . | nindent 8 }}
         {{- include "claude-platform.sessionManager.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "claude-platform.fullname" . }}-session-manager
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -33,15 +32,6 @@ spec:
                 name: {{ include "claude-platform.fullname" . }}-config
             - secretRef:
                 name: {{ include "claude-platform.fullname" . }}-secrets
-          {{- if .Values.scylla.password }}
-          env:
-            - name: SCYLLA_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "claude-platform.fullname" . }}-secrets
-                  key: SCYLLA_PASSWORD
-                  optional: true
-          {{- end }}
           readinessProbe:
             httpGet:
               path: /health
@@ -59,7 +49,6 @@ spec:
           securityContext:
             runAsNonRoot: true
             runAsUser: 1001
-            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:

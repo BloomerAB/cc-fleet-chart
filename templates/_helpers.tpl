@@ -54,9 +54,3 @@ CORS origin - defaults to https://<ingress host>
 {{- end }}
 {{- end }}
 
-{{/*
-Session Manager internal service URL for runner pods.
-*/}}
-{{- define "claude-platform.sessionManager.wsUrl" -}}
-{{- printf "ws://%s-session-manager.%s.svc.cluster.local:3000/ws/runner" (include "claude-platform.fullname" .) .Release.Namespace }}
-{{- end }}
