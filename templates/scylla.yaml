@@ -1,0 +1,183 @@
+{{- if .Values.scylla.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cc-fleet.fullname" . }}-scylla
+  labels:
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+    app.kubernetes.io/name: scylla
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: scylla
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - port: 9042
+      targetPort: 9042
+      protocol: TCP
+      name: cql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "cc-fleet.fullname" . }}-scylla
+  labels:
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+    app.kubernetes.io/name: scylla
+spec:
+  serviceName: {{ include "cc-fleet.fullname" . }}-scylla
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: scylla
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "cc-fleet.labels" . | nindent 8 }}
+        app.kubernetes.io/name: scylla
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: scylla
+          image: {{ .Values.scylla.image }}
+          args:
+            - --smp
+            - "1"
+            - --memory
+            - 512M
+            - --overprovisioned
+            - "1"
+          ports:
+            - containerPort: 9042
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command: ["cqlsh", "-e", "SELECT now() FROM system.local"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["cqlsh", "-e", "SELECT now() FROM system.local"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.scylla.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/scylla
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.scylla.persistence.storageClass }}
+        storageClassName: {{ .Values.scylla.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.scylla.persistence.size }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cc-fleet.fullname" . }}-schema
+  labels:
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+data:
+  schema.cql: |
+    CREATE KEYSPACE IF NOT EXISTS {{ .Values.scylla.keyspace }}
+    WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+    USE {{ .Values.scylla.keyspace }};
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT,
+      github_login TEXT,
+      name TEXT,
+      email TEXT,
+      avatar_url TEXT,
+      access_token TEXT,
+      token_scopes TEXT,
+      created_at TIMESTAMP,
+      updated_at TIMESTAMP,
+      PRIMARY KEY (id)
+    );
+
+    CREATE INDEX IF NOT EXISTS users_by_login ON users (github_login);
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      user_id TEXT,
+      id UUID,
+      status TEXT,
+      prompt TEXT,
+      repos TEXT,
+      max_turns INT,
+      max_budget_usd FLOAT,
+      deadline_seconds INT,
+      result TEXT,
+      created_at TIMESTAMP,
+      updated_at TIMESTAMP,
+      started_at TIMESTAMP,
+      completed_at TIMESTAMP,
+      PRIMARY KEY ((user_id), created_at, id)
+    ) WITH CLUSTERING ORDER BY (created_at DESC, id ASC);
+
+    CREATE INDEX IF NOT EXISTS sessions_by_id ON sessions (id);
+
+    CREATE TABLE IF NOT EXISTS session_messages (
+      session_id UUID,
+      id UUID,
+      role TEXT,
+      content TEXT,
+      tool_name TEXT,
+      created_at TIMESTAMP,
+      PRIMARY KEY ((session_id), created_at, id)
+    ) WITH CLUSTERING ORDER BY (created_at ASC, id ASC);
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cc-fleet.fullname" . }}-schema-init
+  labels:
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: {{ .Values.scylla.image }}
+          command:
+            - sh
+            - -c
+            - |
+              until cqlsh {{ include "cc-fleet.fullname" . }}-scylla -e "SELECT now() FROM system.local"; do
+                echo "Waiting for ScyllaDB..."
+                sleep 5
+              done
+              cqlsh {{ include "cc-fleet.fullname" . }}-scylla -f /schema/schema.cql
+          volumeMounts:
+            - name: schema
+              mountPath: /schema
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      volumes:
+        - name: schema
+          configMap:
+            name: {{ include "cc-fleet.fullname" . }}-schema
+{{- end }}

@@ -50,7 +50,20 @@ CORS origin - defaults to https://<ingress host>
 {{- else if .Values.ingressRoute.enabled }}
 {{- printf "https://%s" .Values.ingressRoute.host }}
 {{- else }}
-{{- "http://localhost:5173" }}
+{{- "http://localhost:3000" }}
+{{- end }}
+{{- end }}
+
+{{/*
+ScyllaDB host — uses built-in service when scylla.enabled, otherwise user-provided host.
+*/}}
+{{- define "cc-fleet.scyllaHost" -}}
+{{- if .Values.scylla.enabled }}
+{{- printf "%s-scylla" (include "cc-fleet.fullname" .) }}
+{{- else if .Values.scylla.host }}
+{{- .Values.scylla.host }}
+{{- else }}
+{{- "localhost" }}
 {{- end }}
 {{- end }}
 

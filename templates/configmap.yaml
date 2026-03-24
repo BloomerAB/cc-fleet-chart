@@ -7,7 +7,7 @@ metadata:
 data:
   PORT: "3000"
   HOST: "0.0.0.0"
-  SCYLLA_HOST: {{ .Values.scylla.host | quote }}
+  SCYLLA_HOST: {{ include "cc-fleet.scyllaHost" . | quote }}
   SCYLLA_PORT: {{ .Values.scylla.port | quote }}
   SCYLLA_DATACENTER: {{ .Values.scylla.datacenter | quote }}
   SCYLLA_KEYSPACE: {{ .Values.scylla.keyspace | quote }}

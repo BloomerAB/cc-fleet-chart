@@ -1,4 +1,4 @@
-# Claude Platform Helm Chart - Default Values
+# CC Fleet Helm Chart
 
 # -- Session Manager (API + WebSocket + SPA + SDK execution)
 sessionManager:
@@ -28,9 +28,25 @@ github:
 # -- JWT secret for session tokens (auto-generated if empty)
 jwtSecret: ""
 
-# -- ScyllaDB connection
+# -- Built-in ScyllaDB (single-node, for simple installs)
 scylla:
-  host: scylla-client.scylla.svc.cluster.local
+  # -- Deploy ScyllaDB as part of this chart
+  enabled: true
+  image: scylladb/scylla:6.2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  persistence:
+    size: 10Gi
+    storageClass: ""
+  # -- Connection settings (used by session manager)
+  # When scylla.enabled=true, host is auto-set to the internal service
+  # When scylla.enabled=false, set host to your external ScyllaDB
+  host: ""
   port: 9042
   datacenter: datacenter1
   keyspace: cc_fleet
