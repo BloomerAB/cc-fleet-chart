@@ -13,145 +13,118 @@ CC Fleet is a self-hosted platform that lets you:
 - Login with GitHub (OAuth) — the same credentials are used for git access
 - Each user brings their own Anthropic API key (or use a shared platform key)
 
-## Setup Guide
+## Prerequisites
 
-### Step 1: Create a GitHub OAuth App
+- Kubernetes cluster with an ingress controller (nginx-ingress, Traefik, etc.)
+- Helm 3
+- A domain name with DNS you control
+- A GitHub account (for creating the OAuth App)
 
-1. Go to [github.com/settings/applications/new](https://github.com/settings/applications/new)
-2. Fill in:
-   - **Application name**: CC Fleet (or whatever you like)
-   - **Homepage URL**: `https://your-domain.com`
-   - **Authorization callback URL**: `https://your-domain.com/api/auth/callback`
-3. Click **Register application**
-4. Copy the **Client ID**
-5. Click **Generate a new client secret** and copy it
+## Setup
 
-The `repo` scope is requested at login, giving Claude read/write access to repos the user has access to.
+### 1. GitHub OAuth App
 
-### Step 2: Anthropic API Key (optional)
+Create a GitHub OAuth App at [github.com/settings/applications/new](https://github.com/settings/applications/new):
 
-You can configure a platform-wide Anthropic key, or let each user set their own in the dashboard Settings page after login.
+- **Homepage URL**: `https://<your-domain>`
+- **Authorization callback URL**: `https://<your-domain>/api/auth/callback`
 
-- **Platform key**: Set `anthropic.apiKey` in the Helm values — all users share this key
-- **Per-user keys**: Skip the platform key — each user enters their key in Settings after first login
-- **Both**: Platform key as fallback, users can override with their own
+Note the **Client ID** and generate a **Client Secret**.
 
-### Step 3: Install the Chart
-
-```bash
-git clone https://github.com/BloomerAB/cc-fleet-chart.git
-cd cc-fleet-chart
-```
-
-**Minimal install (users provide their own Anthropic keys):**
-
-```bash
-helm install cc-fleet . \
-  --namespace cc-fleet --create-namespace \
-  --set github.clientId=YOUR_CLIENT_ID \
-  --set github.clientSecret=YOUR_CLIENT_SECRET \
-  --set ingress.enabled=true \
-  --set ingress.host=your-domain.com
-```
-
-**With platform-wide Anthropic key:**
-
-```bash
-helm install cc-fleet . \
-  --namespace cc-fleet --create-namespace \
-  --set github.clientId=YOUR_CLIENT_ID \
-  --set github.clientSecret=YOUR_CLIENT_SECRET \
-  --set anthropic.apiKey=sk-ant-YOUR_KEY \
-  --set ingress.enabled=true \
-  --set ingress.host=your-domain.com
-```
-
-**With a values file (recommended):**
+### 2. Create a values file
 
 ```yaml
-# my-values.yaml
+# values-production.yaml
+
 github:
-  clientId: "Iv1_abc123"
-  clientSecret: "your-secret"
+  clientId: "<your-github-client-id>"
+  clientSecret: "<your-github-client-secret>"
 
-# Optional — omit to let users set their own
-anthropic:
-  apiKey: "sk-ant-your-key"
+# Optional: platform-wide Anthropic key
+# If omitted, each user sets their own key in the dashboard Settings page.
+# anthropic:
+#   apiKey: "sk-ant-..."
 
-# Standard Kubernetes Ingress
+# Choose one ingress method:
+
+# Option A: Standard Kubernetes Ingress
 ingress:
   enabled: true
-  host: fleet.example.com
+  host: "<your-domain>"
   tls:
     enabled: true
     secretName: cc-fleet-tls
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 
-# Or Traefik IngressRoute
+# Option B: Traefik IngressRoute
 # ingressRoute:
 #   enabled: true
-#   host: fleet.example.com
+#   host: "<your-domain>"
 #   tls:
 #     enabled: true
 #     secretName: cc-fleet-tls
 #     certIssuer: letsencrypt-prod
 
-allowedRepos:
-  - "github.com/MyOrg/*"
+# Optional: restrict which repos can be cloned
+# allowedRepos:
+#   - "github.com/my-org/*"
 ```
 
+### 3. Install
+
 ```bash
-helm install cc-fleet . -n cc-fleet --create-namespace -f my-values.yaml
+git clone https://github.com/BloomerAB/cc-fleet-chart.git
+cd cc-fleet-chart
+
+helm install cc-fleet . -n cc-fleet --create-namespace -f values-production.yaml
 ```
 
-### Step 4: DNS
+### 4. DNS
 
-Point your domain to your cluster's ingress controller IP/load balancer.
+Create an A/CNAME record pointing `<your-domain>` to your ingress controller's external IP.
 
-### Step 5: Verify
+### 5. Verify
 
 ```bash
-# Check pods are running
 kubectl get pods -n cc-fleet
+# Wait for both pods to be Running:
+#   cc-fleet-session-manager-...   1/1  Running
+#   cc-fleet-scylla-0              1/1  Running
 
-# Expected (names will include your Helm release name):
-# cc-fleet-session-manager-xxx   1/1  Running
-# cc-fleet-scylla-0              1/1  Running
-
-# Check the schema init job completed
 kubectl get jobs -n cc-fleet
-
-# Check logs if something is wrong
-kubectl logs -n cc-fleet -l app.kubernetes.io/name=session-manager
+# Schema init job should show 1/1 Completions
 ```
 
-Open `https://your-domain.com` and sign in with GitHub.
+Open `https://<your-domain>` — you should see the login page. Sign in with GitHub.
 
-### Step 6: Configure Anthropic Key
+If no platform-wide Anthropic key was set, go to **Settings** and enter your `sk-ant-...` key before creating tasks.
 
-If you didn't set a platform-wide key in Step 3:
-1. Sign in to the dashboard
-2. Go to **Settings**
-3. Enter your Anthropic API key (`sk-ant-...`)
-4. Save
+### Upgrade
 
-Each user needs to do this once. The key is stored securely per user.
+```bash
+helm upgrade cc-fleet . -n cc-fleet -f values-production.yaml
+```
 
-### Step 7: Install as PWA (optional)
+### Uninstall
 
-The dashboard is installable as a Progressive Web App:
-- **iOS Safari**: Share → Add to Home Screen
-- **Android Chrome**: Menu → Add to Home Screen
-- **Desktop Chrome**: Address bar install icon
+```bash
+helm uninstall cc-fleet -n cc-fleet
+# ScyllaDB PVC is retained — delete manually if you want to remove data:
+kubectl delete pvc -n cc-fleet -l app.kubernetes.io/name=scylla
+```
 
 ## What Gets Deployed
 
-| Component | Description |
-|-----------|-------------|
-| **cc-fleet-manager** | Fastify server — API, WebSocket, dashboard SPA, Claude SDK execution |
-| **ScyllaDB** | Single-node StatefulSet with persistent storage |
-| **Schema init job** | Helm hook that creates keyspace and tables on install/upgrade |
+| Resource | Description |
+|----------|-------------|
+| Deployment | `cc-fleet-session-manager` — API, WebSocket, dashboard SPA, Claude SDK execution |
+| StatefulSet | `cc-fleet-scylla` — single-node ScyllaDB with persistent storage |
+| Job (hook) | `cc-fleet-schema-init` — creates keyspace and tables on install/upgrade |
+| Service | ClusterIP for session-manager (port 3000) and ScyllaDB (port 9042) |
+| Secret | JWT secret (auto-generated), GitHub OAuth credentials, Anthropic key |
+| ConfigMap | Non-secret configuration (ScyllaDB host, task limits, CORS origin) |
+| Ingress/IngressRoute | Based on your ingress configuration |
 
 ## Configuration Reference
 
@@ -161,21 +134,21 @@ The dashboard is installable as a Progressive Web App:
 |-----------|-------------|
 | `github.clientId` | GitHub OAuth App client ID |
 | `github.clientSecret` | GitHub OAuth App client secret |
+| Ingress | At least one of `ingress.enabled` or `ingressRoute.enabled` must be `true` |
 
-### Optional
+### Anthropic
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `anthropic.apiKey` | `""` | Platform-wide Anthropic key (users can set their own) |
-| `jwtSecret` | auto-generated | JWT signing secret |
+| `anthropic.apiKey` | `""` | Platform-wide key. Optional — users can set their own in Settings |
 
 ### Session Manager
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `sessionManager.replicas` | `1` | Number of replicas |
-| `sessionManager.image.repository` | `ghcr.io/bloomerab/cc-fleet-manager` | Container image |
-| `sessionManager.image.tag` | `latest` | Image tag |
+| `sessionManager.replicas` | `1` | Replicas |
+| `sessionManager.image.repository` | `ghcr.io/bloomerab/cc-fleet-manager` | Image |
+| `sessionManager.image.tag` | `latest` | Tag |
 | `sessionManager.resources.limits.cpu` | `2` | CPU limit |
 | `sessionManager.resources.limits.memory` | `2Gi` | Memory limit |
 
@@ -183,49 +156,55 @@ The dashboard is installable as a Progressive Web App:
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `scylla.enabled` | `true` | Deploy built-in ScyllaDB |
+| `scylla.enabled` | `true` | Deploy built-in single-node ScyllaDB |
 | `scylla.host` | auto | External ScyllaDB host (when `enabled=false`) |
 | `scylla.keyspace` | `cc_fleet` | Keyspace name |
 | `scylla.persistence.size` | `10Gi` | Storage size |
-| `scylla.persistence.storageClass` | `""` | Storage class (empty = default) |
+| `scylla.persistence.storageClass` | `""` | Storage class |
 
 ### Tasks
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `tasks.maxConcurrent` | `5` | Max parallel Claude sessions |
-| `tasks.workspaceDir` | `/tmp/cc-fleet-workspaces` | Temp dir for cloned repos |
-| `allowedRepos` | `[]` | Glob patterns (empty = all repos allowed) |
+| `tasks.workspaceDir` | `/tmp/cc-fleet-workspaces` | Temp workspace directory |
+| `allowedRepos` | `[]` | Glob patterns for allowed repos (empty = all) |
 
 ### Ingress
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `ingress.enabled` | `false` | Enable standard K8s Ingress |
+| `ingress.enabled` | `false` | Standard K8s Ingress |
 | `ingress.host` | `fleet.example.com` | Hostname |
 | `ingress.className` | `""` | Ingress class |
-| `ingress.tls.enabled` | `false` | Enable TLS |
-| `ingress.tls.secretName` | `cc-fleet-tls` | TLS secret name |
-| `ingressRoute.enabled` | `false` | Enable Traefik IngressRoute |
+| `ingress.tls.enabled` | `false` | TLS |
+| `ingress.tls.secretName` | `cc-fleet-tls` | TLS secret |
+| `ingressRoute.enabled` | `false` | Traefik IngressRoute |
+| `ingressRoute.host` | `fleet.example.com` | Hostname |
 | `ingressRoute.tls.certIssuer` | `letsencrypt-prod` | cert-manager ClusterIssuer |
+
+### Other
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `jwtSecret` | auto-generated | JWT signing secret (persists across upgrades) |
 | `github.scopes` | `read:user,repo` | GitHub OAuth scopes |
-| `corsOrigin` | auto from ingress host | CORS origin override |
-| `imagePullSecrets` | `[]` | Pull secrets for private registries |
+| `corsOrigin` | auto | CORS origin (derived from ingress host) |
+| `imagePullSecrets` | `[]` | Image pull secrets |
 
-## Using External ScyllaDB
+## External ScyllaDB
 
-If you already run ScyllaDB in your cluster:
+To use an existing ScyllaDB instead of the built-in one:
 
-```bash
-helm install cc-fleet . \
-  --set scylla.enabled=false \
-  --set scylla.host=scylla-client.scylla.svc.cluster.local \
-  ...
+```yaml
+scylla:
+  enabled: false
+  host: scylla-client.my-namespace.svc.cluster.local
 ```
 
-You'll need to create the keyspace and tables manually — see [cc-fleet-manager/src/db/schema.cql](https://github.com/BloomerAB/cc-fleet-manager/blob/main/src/db/schema.cql).
+Create the schema manually: [cc-fleet-manager/src/db/schema.cql](https://github.com/BloomerAB/cc-fleet-manager/blob/main/src/db/schema.cql)
 
-## Using with Flux GitOps
+## Flux GitOps
 
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -267,49 +246,35 @@ spec:
       host: fleet.example.com
       tls:
         enabled: true
-        secretName: cc-fleet-tls
-        certIssuer: letsencrypt-prod
 ```
 
 ## Troubleshooting
 
-**Pods not starting?**
-```bash
-kubectl describe pod -n cc-fleet -l app.kubernetes.io/name=session-manager
-kubectl logs -n cc-fleet -l app.kubernetes.io/name=session-manager
-```
-
-**ScyllaDB not ready?** It takes 30-60 seconds to start. The schema init job retries until ScyllaDB is healthy.
-
-**Login redirect fails?** Check that the GitHub OAuth callback URL matches exactly: `https://your-domain.com/api/auth/callback`
-
-**"No Anthropic API key configured"?** Either set `anthropic.apiKey` in Helm values, or sign in and go to Settings to enter your key.
-
-**Can't clone repos?** The GitHub OAuth `repo` scope gives access to repos the logged-in user can access. If a repo is not accessible, check the user's GitHub permissions.
+| Problem | Check |
+|---------|-------|
+| Pods not starting | `kubectl describe pod -n cc-fleet -l app.kubernetes.io/name=session-manager` |
+| ScyllaDB not ready | Takes 30-60s. Schema init job retries automatically. |
+| Login redirect fails | GitHub OAuth callback URL must match exactly: `https://<your-domain>/api/auth/callback` |
+| "No Anthropic API key" | Set `anthropic.apiKey` in values, or sign in → Settings → enter key |
+| Can't clone repos | User must have access to the repo on GitHub. Check `allowedRepos` if set. |
+| TLS not working | Check cert-manager logs: `kubectl logs -n cert-manager deploy/cert-manager` |
 
 ## Architecture
 
 ```
-                 ┌──────────────────────┐
-  Browser ────── │  cc-fleet-manager     │
-                 │                       │
-                 │  /         → React SPA│
-                 │  /api/*    → REST API │
-                 │  /ws/*     → WebSocket│
-                 │                       │
-                 │  Claude Agent SDK     │
-                 │  (in-process)         │
-                 └───────┬──────────────┘
-                         │
-                  ┌──────▼──────┐
-                  │  ScyllaDB   │
-                  └─────────────┘
+Browser → Ingress → cc-fleet-manager (port 3000)
+                     ├── /          React SPA (dashboard)
+                     ├── /api/*     REST API
+                     ├── /ws/*      WebSocket (real-time output)
+                     └── Claude Agent SDK (in-process)
+                              │
+                         ScyllaDB (port 9042)
 ```
 
 ## Related Repos
 
 | Repo | Description |
 |------|-------------|
-| [cc-fleet-manager](https://github.com/BloomerAB/cc-fleet-manager) | Platform server (API + WS + SPA + SDK) |
-| [cc-fleet-ui](https://github.com/BloomerAB/cc-fleet-ui) | React dashboard (built into manager image) |
+| [cc-fleet-manager](https://github.com/BloomerAB/cc-fleet-manager) | Platform server |
+| [cc-fleet-ui](https://github.com/BloomerAB/cc-fleet-ui) | React dashboard |
 | [cc-fleet-types](https://github.com/BloomerAB/cc-fleet-types) | Shared TypeScript types |
