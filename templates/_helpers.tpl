@@ -40,14 +40,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Dashboard selector labels.
-*/}}
-{{- define "claude-platform.dashboard.selectorLabels" -}}
-app.kubernetes.io/name: dashboard
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
 CORS origin - defaults to https://<ingress host>
 */}}
 {{- define "claude-platform.corsOrigin" -}}

@@ -1,6 +1,6 @@
 # Claude Platform Helm Chart - Default Values
 
-# -- Session Manager (API + WebSocket hub)
+# -- Session Manager (API + WebSocket hub + serves dashboard SPA)
 sessionManager:
   image:
     repository: ghcr.io/bloomerab/claude-session-manager
@@ -14,21 +14,6 @@ sessionManager:
     limits:
       cpu: 500m
       memory: 512Mi
-
-# -- Dashboard (React web UI)
-dashboard:
-  image:
-    repository: ghcr.io/bloomerab/claude-dashboard
-    tag: latest
-    pullPolicy: IfNotPresent
-  replicas: 1
-  resources:
-    requests:
-      cpu: 10m
-      memory: 32Mi
-    limits:
-      cpu: 100m
-      memory: 64Mi
 
 # -- Agent Runner (spawned as K8s Jobs)
 agentRunner:

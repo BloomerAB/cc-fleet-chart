@@ -18,4 +18,5 @@ data:
   RUNNER_NAMESPACE: {{ .Release.Namespace | quote }}
   ANTHROPIC_SECRET_NAME: {{ .Values.anthropic.secretName | quote }}
   ANTHROPIC_SECRET_KEY: {{ .Values.anthropic.secretKey | quote }}
+  MANAGER_SERVICE_NAME: {{ include "claude-platform.fullname" . }}-session-manager
   CORS_ORIGIN: {{ include "claude-platform.corsOrigin" . | quote }}

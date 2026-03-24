@@ -27,9 +27,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "claude-platform.fullname" . }}-dashboard
+                name: {{ include "claude-platform.fullname" . }}-session-manager
                 port:
-                  number: 80
+                  number: 3000
 {{- end }}
 ---
 {{- if .Values.ingressRoute.enabled }}
@@ -50,8 +50,8 @@ spec:
     - match: Host(`{{ .Values.ingressRoute.host }}`)
       kind: Rule
       services:
-        - name: {{ include "claude-platform.fullname" . }}-dashboard
-          port: 80
+        - name: {{ include "claude-platform.fullname" . }}-session-manager
+          port: 3000
   {{- if .Values.ingressRoute.tls.enabled }}
   tls:
     secretName: {{ .Values.ingressRoute.tls.secretName }}
