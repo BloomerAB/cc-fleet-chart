@@ -16,6 +16,7 @@ CC Fleet is a self-hosted platform that lets you:
 ## Prerequisites
 
 - Kubernetes cluster with an ingress controller (nginx-ingress, Traefik, etc.)
+- TLS certificate provisioning (e.g. cert-manager with a ClusterIssuer) — HTTPS is required for OAuth
 - Helm 3
 - A domain name with DNS you control
 - A GitHub account (for creating the OAuth App)
