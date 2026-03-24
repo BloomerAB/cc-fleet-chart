@@ -27,9 +27,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "cc-fleet.fullname" . }}-session-manager
+                name: {{ include "cc-fleet.fullname" . }}-ui
                 port:
-                  number: 3000
+                  number: 80
 {{- end }}
 ---
 {{- if .Values.ingressRoute.enabled }}
@@ -46,8 +46,8 @@ spec:
     - match: Host(`{{ .Values.ingressRoute.host }}`)
       kind: Rule
       services:
-        - name: {{ include "cc-fleet.fullname" . }}-session-manager
-          port: 3000
+        - name: {{ include "cc-fleet.fullname" . }}-ui
+          port: 80
   {{- if .Values.ingressRoute.tls.enabled }}
   tls:
     secretName: {{ .Values.ingressRoute.tls.secretName }}

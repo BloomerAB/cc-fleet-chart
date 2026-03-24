@@ -1,6 +1,6 @@
 # CC Fleet Helm Chart
 
-# -- Session Manager (API + WebSocket + SPA + SDK execution)
+# -- Session Manager (API + WebSocket + SDK execution)
 sessionManager:
   image:
     repository: ghcr.io/bloomerab/cc-fleet-manager
@@ -14,6 +14,13 @@ sessionManager:
     limits:
       cpu: "2"
       memory: 2Gi
+
+# -- Web Dashboard
+ui:
+  image:
+    repository: ghcr.io/bloomerab/cc-fleet-ui
+    tag: latest
+    pullPolicy: IfNotPresent
 
 # -- Anthropic API Key (optional — users can set their own in Settings)
 anthropic:
