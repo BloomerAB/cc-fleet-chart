@@ -1,6 +1,6 @@
 # CC Fleet
 
-Run Claude Code sessions across multiple repositories from a web dashboard. Installable as a PWA for mobile access.
+Run Claude Code sessions across multiple repositories from a web dashboard.
 
 ## What is CC Fleet?
 
@@ -118,7 +118,7 @@ kubectl delete pvc -n cc-fleet -l app.kubernetes.io/name=scylla
 
 | Resource | Description |
 |----------|-------------|
-| Deployment | `cc-fleet-session-manager` — API, WebSocket, dashboard SPA, Claude SDK execution |
+| Deployment | `cc-fleet-session-manager` — API, WebSocket, web dashboard, Claude SDK execution |
 | StatefulSet | `cc-fleet-scylla` — single-node ScyllaDB with persistent storage |
 | Job (hook) | `cc-fleet-schema-init` — creates keyspace and tables on install/upgrade |
 | Service | ClusterIP for session-manager (port 3000) and ScyllaDB (port 9042) |
@@ -263,7 +263,7 @@ spec:
 
 ```
 Browser → Ingress → cc-fleet-manager (port 3000)
-                     ├── /          React SPA (dashboard)
+                     ├── /          Web dashboard
                      ├── /api/*     REST API
                      ├── /ws/*      WebSocket (real-time output)
                      └── Claude Agent SDK (in-process)
