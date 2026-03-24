@@ -3,7 +3,7 @@
 # -- Session Manager (API + WebSocket + SPA + SDK execution)
 sessionManager:
   image:
-    repository: ghcr.io/bloomerab/claude-session-manager
+    repository: ghcr.io/bloomerab/cc-fleet-manager
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
@@ -33,14 +33,14 @@ scylla:
   host: scylla-client.scylla.svc.cluster.local
   port: 9042
   datacenter: datacenter1
-  keyspace: claude_platform
+  keyspace: cc_fleet
   username: ""
   password: ""
 
 # -- Task execution
 tasks:
   maxConcurrent: 5
-  workspaceDir: /tmp/claude-workspaces
+  workspaceDir: /tmp/cc-fleet-workspaces
 
 # -- Repo allowlist (empty = all repos allowed)
 # Example: ["github.com/MyOrg/*", "github.com/other-org/specific-repo"]
@@ -50,19 +50,19 @@ allowedRepos: []
 ingress:
   enabled: false
   className: ""
-  host: claude.example.com
+  host: fleet.example.com
   tls:
     enabled: false
-    secretName: claude-platform-tls
+    secretName: cc-fleet-tls
   annotations: {}
 
 # -- Traefik IngressRoute (alternative to ingress)
 ingressRoute:
   enabled: false
-  host: claude.example.com
+  host: fleet.example.com
   tls:
     enabled: true
-    secretName: claude-platform-tls
+    secretName: cc-fleet-tls
     certIssuer: letsencrypt-prod
 
 # -- Image pull secrets for private registries

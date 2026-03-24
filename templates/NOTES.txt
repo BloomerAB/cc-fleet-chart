@@ -5,7 +5,7 @@ Dashboard: https://{{ .Values.ingress.host }}
 {{- else if .Values.ingressRoute.enabled }}
 Dashboard: https://{{ .Values.ingressRoute.host }}
 {{- else }}
-Dashboard: kubectl port-forward svc/{{ include "claude-platform.fullname" . }}-session-manager 3000:3000
+Dashboard: kubectl port-forward svc/{{ include "cc-fleet.fullname" . }}-session-manager 3000:3000
             Then open http://localhost:3000
 {{- end }}
 
@@ -13,6 +13,6 @@ Prerequisites:
   1. ScyllaDB must be running at {{ .Values.scylla.host }}:{{ .Values.scylla.port }}
      Schema must be initialized (see schema.cql in the session-manager repo)
   2. GitHub OAuth App configured with callback:
-     {{ include "claude-platform.corsOrigin" . }}/api/auth/callback
+     {{ include "cc-fleet.corsOrigin" . }}/api/auth/callback
 
 PWA: The dashboard is installable as a Progressive Web App on mobile and desktop.

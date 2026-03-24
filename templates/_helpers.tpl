@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "claude-platform.name" -}}
+{{- define "cc-fleet.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Fullname with release name.
 */}}
-{{- define "claude-platform.fullname" -}}
+{{- define "cc-fleet.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,17 +24,17 @@ Fullname with release name.
 {{/*
 Common labels.
 */}}
-{{- define "claude-platform.labels" -}}
-helm.sh/chart: {{ include "claude-platform.name" . }}-{{ .Chart.Version | replace "+" "_" }}
+{{- define "cc-fleet.labels" -}}
+helm.sh/chart: {{ include "cc-fleet.name" . }}-{{ .Chart.Version | replace "+" "_" }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: claude-platform
+app.kubernetes.io/part-of: cc-fleet
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 
 {{/*
 Session Manager selector labels.
 */}}
-{{- define "claude-platform.sessionManager.selectorLabels" -}}
+{{- define "cc-fleet.sessionManager.selectorLabels" -}}
 app.kubernetes.io/name: session-manager
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
@@ -42,7 +42,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 CORS origin - defaults to https://<ingress host>
 */}}
-{{- define "claude-platform.corsOrigin" -}}
+{{- define "cc-fleet.corsOrigin" -}}
 {{- if .Values.corsOrigin }}
 {{- .Values.corsOrigin }}
 {{- else if .Values.ingress.enabled }}

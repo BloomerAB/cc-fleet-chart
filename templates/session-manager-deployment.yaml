@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "claude-platform.fullname" . }}-session-manager
+  name: {{ include "cc-fleet.fullname" . }}-session-manager
   labels:
-    {{- include "claude-platform.labels" . | nindent 4 }}
-    {{- include "claude-platform.sessionManager.selectorLabels" . | nindent 4 }}
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+    {{- include "cc-fleet.sessionManager.selectorLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.sessionManager.replicas }}
   selector:
     matchLabels:
-      {{- include "claude-platform.sessionManager.selectorLabels" . | nindent 6 }}
+      {{- include "cc-fleet.sessionManager.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "claude-platform.labels" . | nindent 8 }}
-        {{- include "claude-platform.sessionManager.selectorLabels" . | nindent 8 }}
+        {{- include "cc-fleet.labels" . | nindent 8 }}
+        {{- include "cc-fleet.sessionManager.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -29,9 +29,9 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "claude-platform.fullname" . }}-config
+                name: {{ include "cc-fleet.fullname" . }}-config
             - secretRef:
-                name: {{ include "claude-platform.fullname" . }}-secrets
+                name: {{ include "cc-fleet.fullname" . }}-secrets
           readinessProbe:
             httpGet:
               path: /health

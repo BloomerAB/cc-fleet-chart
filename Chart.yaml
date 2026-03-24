@@ -1,5 +1,5 @@
 apiVersion: v2
-name: claude-platform
+name: cc-fleet
 description: Remote Claude Code Platform — run Claude Code sessions in K8s pods with a web dashboard
 type: application
 version: 0.1.0
@@ -9,11 +9,11 @@ keywords:
   - ai
   - kubernetes
   - devtools
-home: https://github.com/BloomerAB/claude-platform-chart
+home: https://github.com/BloomerAB/cc-fleet-chart
 sources:
-  - https://github.com/BloomerAB/claude-session-manager
-  - https://github.com/BloomerAB/claude-agent-runner
-  - https://github.com/BloomerAB/claude-dashboard
+  - https://github.com/BloomerAB/cc-fleet-manager
+  - https://github.com/BloomerAB/cc-fleet-manager
+  - https://github.com/BloomerAB/cc-fleet-ui
 maintainers:
   - name: Bloomer AB
     url: https://bloomer.se

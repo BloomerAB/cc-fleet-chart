@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "claude-platform.fullname" . }}
+  name: {{ include "cc-fleet.fullname" . }}
   labels:
-    {{- include "claude-platform.labels" . | nindent 4 }}
+    {{- include "cc-fleet.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -27,7 +27,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "claude-platform.fullname" . }}-session-manager
+                name: {{ include "cc-fleet.fullname" . }}-session-manager
                 port:
                   number: 3000
 {{- end }}
@@ -36,9 +36,9 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "claude-platform.fullname" . }}
+  name: {{ include "cc-fleet.fullname" . }}
   labels:
-    {{- include "claude-platform.labels" . | nindent 4 }}
+    {{- include "cc-fleet.labels" . | nindent 4 }}
   {{- if .Values.ingressRoute.tls.certIssuer }}
   annotations:
     cert-manager.io/cluster-issuer: {{ .Values.ingressRoute.tls.certIssuer }}
@@ -50,7 +50,7 @@ spec:
     - match: Host(`{{ .Values.ingressRoute.host }}`)
       kind: Rule
       services:
-        - name: {{ include "claude-platform.fullname" . }}-session-manager
+        - name: {{ include "cc-fleet.fullname" . }}-session-manager
           port: 3000
   {{- if .Values.ingressRoute.tls.enabled }}
   tls:
