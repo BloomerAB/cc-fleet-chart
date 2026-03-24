@@ -39,10 +39,6 @@ metadata:
   name: {{ include "cc-fleet.fullname" . }}
   labels:
     {{- include "cc-fleet.labels" . | nindent 4 }}
-  {{- if .Values.ingressRoute.tls.certIssuer }}
-  annotations:
-    cert-manager.io/cluster-issuer: {{ .Values.ingressRoute.tls.certIssuer }}
-  {{- end }}
 spec:
   entryPoints:
     - websecure
@@ -58,4 +54,20 @@ spec:
     domains:
       - main: {{ .Values.ingressRoute.host }}
   {{- end }}
+---
+{{- if and .Values.ingressRoute.tls.enabled .Values.ingressRoute.tls.certIssuer }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "cc-fleet.fullname" . }}
+  labels:
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.ingressRoute.tls.secretName }}
+  issuerRef:
+    name: {{ .Values.ingressRoute.tls.certIssuer }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .Values.ingressRoute.host }}
+{{- end }}
 {{- end }}
