@@ -80,6 +80,7 @@ spec:
         resources:
           requests:
             storage: {{ .Values.scylla.persistence.size }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -102,6 +103,7 @@ data:
       avatar_url TEXT,
       access_token TEXT,
       token_scopes TEXT,
+      anthropic_api_key TEXT,
       created_at TIMESTAMP,
       updated_at TIMESTAMP,
       PRIMARY KEY (id)
@@ -161,11 +163,11 @@ spec:
             - sh
             - -c
             - |
-              until cqlsh {{ include "cc-fleet.fullname" . }}-scylla -e "SELECT now() FROM system.local"; do
+              until cqlsh {{ include "cc-fleet.scyllaHost" . }} -e "SELECT now() FROM system.local"; do
                 echo "Waiting for ScyllaDB..."
                 sleep 5
               done
-              cqlsh {{ include "cc-fleet.fullname" . }}-scylla -f /schema/schema.cql
+              cqlsh {{ include "cc-fleet.scyllaHost" . }} -f /schema/schema.cql
           volumeMounts:
             - name: schema
               mountPath: /schema
@@ -180,4 +182,3 @@ spec:
         - name: schema
           configMap:
             name: {{ include "cc-fleet.fullname" . }}-schema
-{{- end }}
