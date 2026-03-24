@@ -1,0 +1,106 @@
+# Claude Platform Helm Chart - Default Values
+
+# -- Session Manager (API + WebSocket hub)
+sessionManager:
+  image:
+    repository: ghcr.io/bloomerab/claude-session-manager
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -- Dashboard (React web UI)
+dashboard:
+  image:
+    repository: ghcr.io/bloomerab/claude-dashboard
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+# -- Agent Runner (spawned as K8s Jobs)
+agentRunner:
+  image:
+    repository: ghcr.io/bloomerab/claude-agent-runner
+    tag: latest
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+# -- Anthropic API Key
+anthropic:
+  # -- Name of the K8s Secret containing the Anthropic API key
+  secretName: anthropic-api-key
+  # -- Key within the secret
+  secretKey: api-key
+  # -- Set this to create the secret automatically (leave empty to use existing secret)
+  apiKey: ""
+
+# -- GitHub OAuth App (for user login)
+github:
+  clientId: ""
+  clientSecret: ""
+
+# -- GitHub App (for repo cloning in runner pods)
+githubApp:
+  appId: ""
+  privateKey: ""
+  installationId: ""
+
+# -- JWT secret for session tokens (auto-generated if empty)
+jwtSecret: ""
+
+# -- ScyllaDB connection
+scylla:
+  host: scylla-client.scylla.svc.cluster.local
+  port: 9042
+  datacenter: datacenter1
+  keyspace: claude_platform
+  username: ""
+  password: ""
+  # -- Run schema init job on install
+  initSchema: true
+  # -- Replication factor for the keyspace
+  replicationFactor: 1
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  # -- Dashboard hostname
+  host: claude.example.com
+  tls:
+    enabled: false
+    secretName: claude-platform-tls
+  annotations: {}
+
+# -- Traefik IngressRoute (alternative to ingress)
+ingressRoute:
+  enabled: false
+  host: claude.example.com
+  tls:
+    enabled: true
+    secretName: claude-platform-tls
+    certIssuer: letsencrypt-prod
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- CORS origin (defaults to https://<ingress.host>)
+corsOrigin: ""

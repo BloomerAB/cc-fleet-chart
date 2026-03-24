@@ -1,0 +1,61 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "claude-platform.fullname" . }}
+  labels:
+    {{- include "claude-platform.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "claude-platform.fullname" . }}-dashboard
+                port:
+                  number: 80
+{{- end }}
+---
+{{- if .Values.ingressRoute.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "claude-platform.fullname" . }}
+  labels:
+    {{- include "claude-platform.labels" . | nindent 4 }}
+  {{- if .Values.ingressRoute.tls.certIssuer }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.ingressRoute.tls.certIssuer }}
+  {{- end }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.ingressRoute.host }}`)
+      kind: Rule
+      services:
+        - name: {{ include "claude-platform.fullname" . }}-dashboard
+          port: 80
+  {{- if .Values.ingressRoute.tls.enabled }}
+  tls:
+    secretName: {{ .Values.ingressRoute.tls.secretName }}
+    domains:
+      - main: {{ .Values.ingressRoute.host }}
+  {{- end }}
+{{- end }}

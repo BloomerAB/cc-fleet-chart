@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "claude-platform.fullname" . }}-session-manager
+  labels:
+    {{- include "claude-platform.labels" . | nindent 4 }}
+    {{- include "claude-platform.sessionManager.selectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "claude-platform.sessionManager.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP

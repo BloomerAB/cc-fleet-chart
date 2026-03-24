@@ -1,0 +1,19 @@
+apiVersion: v2
+name: claude-platform
+description: Remote Claude Code Platform — run Claude Code sessions in K8s pods with a web dashboard
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - claude
+  - ai
+  - kubernetes
+  - devtools
+home: https://github.com/BloomerAB/claude-platform-chart
+sources:
+  - https://github.com/BloomerAB/claude-session-manager
+  - https://github.com/BloomerAB/claude-agent-runner
+  - https://github.com/BloomerAB/claude-dashboard
+maintainers:
+  - name: Bloomer AB
+    url: https://bloomer.se
