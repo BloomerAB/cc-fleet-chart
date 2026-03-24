@@ -15,7 +15,7 @@ sessionManager:
       cpu: "2"
       memory: 2Gi
 
-# -- Anthropic API Key (required)
+# -- Anthropic API Key (optional — users can set their own in Settings)
 anthropic:
   apiKey: ""
 
