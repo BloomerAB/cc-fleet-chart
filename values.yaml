@@ -22,9 +22,18 @@ ui:
     tag: latest
     pullPolicy: IfNotPresent
 
+# -- Authentication mode: "apiKey" uses ANTHROPIC_API_KEY, "subscription" uses claude auth login
+authMode: apiKey
+
 # -- Anthropic API Key (optional — users can set their own in Settings)
 anthropic:
   apiKey: ""
+
+# -- Claude credentials persistence (required for authMode: subscription)
+claudeCredentials:
+  enabled: false
+  size: 100Mi
+  storageClass: ""
 
 # -- GitHub OAuth App (required for login + git access)
 github:

@@ -44,6 +44,11 @@ spec:
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 30
+          {{- if .Values.claudeCredentials.enabled }}
+          volumeMounts:
+            - name: claude-credentials
+              mountPath: /home/appuser/.claude
+          {{- end }}
           resources:
             {{- toYaml .Values.sessionManager.resources | nindent 12 }}
           securityContext:
@@ -53,3 +58,9 @@ spec:
             capabilities:
               drop:
                 - ALL
+      {{- if .Values.claudeCredentials.enabled }}
+      volumes:
+        - name: claude-credentials
+          persistentVolumeClaim:
+            claimName: {{ include "cc-fleet.fullname" . }}-claude-credentials
+      {{- end }}

@@ -21,3 +21,4 @@ data:
   ALLOWED_REPOS: {{ join "," .Values.allowedRepos | quote }}
   {{- end }}
   CORS_ORIGIN: {{ include "cc-fleet.corsOrigin" . | quote }}
+  AUTH_MODE: {{ .Values.authMode | quote }}
