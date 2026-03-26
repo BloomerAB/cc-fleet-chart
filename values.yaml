@@ -4,7 +4,7 @@
 sessionManager:
   image:
     repository: ghcr.io/bloomerab/cc-fleet-manager
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
@@ -19,7 +19,7 @@ sessionManager:
 ui:
   image:
     repository: ghcr.io/bloomerab/cc-fleet-ui
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
 
 # -- Authentication mode: "apiKey" uses ANTHROPIC_API_KEY, "subscription" uses claude auth login

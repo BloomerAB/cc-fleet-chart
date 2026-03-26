@@ -80,7 +80,6 @@ spec:
         resources:
           requests:
             storage: {{ .Values.scylla.persistence.size }}
-{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -182,3 +181,4 @@ spec:
         - name: schema
           configMap:
             name: {{ include "cc-fleet.fullname" . }}-schema
+{{- end }}

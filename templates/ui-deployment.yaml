@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
         - name: ui
-          image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}"
+          image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           ports:
             - containerPort: 80
@@ -55,6 +55,12 @@ spec:
             limits:
               cpu: 100m
               memory: 64Mi
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
       volumes:
         - name: nginx-config
           configMap:

@@ -125,4 +125,4 @@ For larger deployments, pod-per-session architecture is planned.
 
 ## License
 
-Proprietary — Bloomer AB
+MIT — Bloomer AB

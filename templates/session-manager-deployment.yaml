@@ -22,7 +22,7 @@ spec:
       {{- end }}
       containers:
         - name: session-manager
-          image: "{{ .Values.sessionManager.image.repository }}:{{ .Values.sessionManager.image.tag }}"
+          image: "{{ .Values.sessionManager.image.repository }}:{{ .Values.sessionManager.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.sessionManager.image.pullPolicy }}
           ports:
             - containerPort: 3000

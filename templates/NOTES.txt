@@ -1,17 +1,22 @@
-Claude Platform has been installed!
+Claude Code Fleet has been installed!
 
 {{- if .Values.ingress.enabled }}
 Dashboard: https://{{ .Values.ingress.host }}
 {{- else if .Values.ingressRoute.enabled }}
 Dashboard: https://{{ .Values.ingressRoute.host }}
 {{- else }}
-Dashboard: kubectl port-forward svc/{{ include "cc-fleet.fullname" . }}-session-manager 3000:3000
-            Then open http://localhost:3000
+Dashboard: kubectl port-forward svc/{{ include "cc-fleet.fullname" . }}-ui 8080:80
+            Then open http://localhost:8080
 {{- end }}
 
 Prerequisites:
+{{- if .Values.scylla.enabled }}
+  1. ScyllaDB is deployed as part of this release.
+     Schema will be initialized automatically via the post-install hook.
+{{- else }}
   1. ScyllaDB must be running at {{ .Values.scylla.host }}:{{ .Values.scylla.port }}
      Schema must be initialized (see schema.cql in the session-manager repo)
+{{- end }}
   2. GitHub OAuth App configured with callback:
      {{ include "cc-fleet.corsOrigin" . }}/api/auth/callback
 
