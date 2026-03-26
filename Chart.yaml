@@ -1,19 +1,24 @@
 apiVersion: v2
 name: cc-fleet
-description: Remote Claude Code Platform — run Claude Code sessions in K8s pods with a web dashboard
+description: >-
+  Claude Code Fleet — run interactive Claude Code sessions in Kubernetes.
+  Web dashboard for dispatching tasks, streaming output, sending follow-ups,
+  and syncing sessions between local Claude Code and Fleet via MCP.
 type: application
 version: 0.3.0
-appVersion: "0.1.0"
+appVersion: "0.3.0"
 keywords:
   - claude
+  - claude-code
   - ai
   - kubernetes
   - devtools
+  - mcp
 home: https://github.com/BloomerAB/cc-fleet-chart
 sources:
   - https://github.com/BloomerAB/cc-fleet-manager
-  - https://github.com/BloomerAB/cc-fleet-manager
   - https://github.com/BloomerAB/cc-fleet-ui
+  - https://github.com/BloomerAB/cc-fleet-chart
 maintainers:
   - name: Bloomer AB
     url: https://bloomer.se
