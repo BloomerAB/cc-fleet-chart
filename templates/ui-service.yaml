@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cc-fleet.fullname" . }}-ui
+  labels:
+    {{- include "cc-fleet.labels" . | nindent 4 }}
+    app.kubernetes.io/name: ui
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: ui
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - port: 3001
+      targetPort: 3001
+      protocol: TCP

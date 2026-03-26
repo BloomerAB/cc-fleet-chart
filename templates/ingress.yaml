@@ -23,13 +23,27 @@ spec:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
                 name: {{ include "cc-fleet.fullname" . }}-session-manager
                 port:
                   number: 3000
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "cc-fleet.fullname" . }}-session-manager
+                port:
+                  number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "cc-fleet.fullname" . }}-ui
+                port:
+                  number: 3001
 {{- end }}
 ---
 {{- if .Values.ingressRoute.enabled }}
@@ -43,11 +57,16 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`{{ .Values.ingressRoute.host }}`)
+    - match: Host(`{{ .Values.ingressRoute.host }}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`))
       kind: Rule
       services:
         - name: {{ include "cc-fleet.fullname" . }}-session-manager
           port: 3000
+    - match: Host(`{{ .Values.ingressRoute.host }}`)
+      kind: Rule
+      services:
+        - name: {{ include "cc-fleet.fullname" . }}-ui
+          port: 3001
   {{- if .Values.ingressRoute.tls.enabled }}
   tls:
     secretName: {{ .Values.ingressRoute.tls.secretName }}
