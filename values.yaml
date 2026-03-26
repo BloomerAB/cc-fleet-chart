@@ -15,13 +15,6 @@ sessionManager:
       cpu: "2"
       memory: 2Gi
 
-# -- Web Dashboard
-ui:
-  image:
-    repository: ghcr.io/bloomerab/cc-fleet-ui
-    tag: ""
-    pullPolicy: IfNotPresent
-
 # -- Authentication mode: "apiKey" uses ANTHROPIC_API_KEY, "subscription" uses claude auth login
 authMode: apiKey
 
