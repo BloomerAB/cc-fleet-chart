@@ -5,8 +5,8 @@ description: >-
   Web dashboard for dispatching tasks, streaming output, sending follow-ups,
   and syncing sessions between local Claude Code and Fleet via MCP.
 type: application
-version: 0.4.0
-appVersion: "0.4.0"
+version: 0.5.0
+appVersion: "0.5.0"
 keywords:
   - claude
   - claude-code
